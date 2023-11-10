@@ -71,7 +71,7 @@ export class cartItemAccess {
       UpdateExpression: 'set #a = :a, #b = :b, #c = :c, #d = :d',
       ExpressionAttributeNames: {
         '#a': 'name',
-        '#b': 'price',
+        '#b': 'description',
         '#c': 'price',
         '#d': 'done'
       },
