@@ -2,7 +2,7 @@ import 'source-map-support/register'
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 
-import { deleteToDo } from '../../businessLogic/todos'
+import { deleteCartItem } from '../../businessLogic/cartItems'
 
   export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     console.log("Processing Event ", event);
@@ -10,9 +10,8 @@ import { deleteToDo } from '../../businessLogic/todos'
     const split = authorization.split(' ');
     const jwtToken = split[1];
     
-    const todoId = event.pathParameters.todoId
-    const deleteData = await deleteToDo(todoId, jwtToken);
-    // TODO: Remove a TODO item by id
+    const itemId = event.pathParameters.itemId
+    const deleteData = await deleteCartItem(itemId, jwtToken);
     
     return {
       statusCode: 200,

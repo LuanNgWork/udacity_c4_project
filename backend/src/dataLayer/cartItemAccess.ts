@@ -1,26 +1,25 @@
 import * as AWS from 'aws-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
-import { TodoItem } from '../models/TodoItem'
-import { TodoUpdate } from '../models/TodoUpdate'
+import { CartItem } from '../models/CartItem'
+import { CartUpdate } from '../models/CartUpdate'
 import { Types } from 'aws-sdk/clients/s3'
 
-// TODO: Implement the dataLayer logic
 const AWSXRay = require('aws-xray-sdk')
 const XAWS = AWSXRay.captureAWS(AWS)
 
-export class todosAccess {
+export class cartItemAccess {
   constructor(
     private readonly docClient: DocumentClient = new XAWS.DynamoDB.DocumentClient(),
     private readonly s3Client: Types = new XAWS.S3({ signatureVersion: 'v4' }),
-    private readonly todoTable = process.env.TODOS_TABLE,
+    private readonly cartTable = process.env.CART_ITEMS_TABLE,
     private readonly s3BucketName = process.env.S3_BUCKET_NAME
   ) {}
 
-  async getAllToDo(userId: string): Promise<TodoItem[]> {
-    console.log('Getting all todo')
+  async getAllCartItems(userId: string): Promise<CartItem[]> {
+    console.log('Getting all cart item')
 
     const params = {
-      TableName: this.todoTable,
+      TableName: this.cartTable,
       KeyConditionExpression: '#userId = :userId',
       ExpressionAttributeNames: {
         '#userId': 'userId'
@@ -31,54 +30,56 @@ export class todosAccess {
     }
     const result = await this.docClient.query(params).promise()
     console.log(result)
-    const items: TodoItem[] = result.Items as TodoItem[];
+    const items: CartItem[] = result.Items as CartItem[];
     items.forEach((item) => {
       const url = this.s3Client.getSignedUrl('getObject', {
         Bucket: this.s3BucketName,
-        Key: item.todoId,
+        Key: item.itemId,
         Expires: 1000
       })
-      item.attachmentUrl = url
+      item.imageUrl = url
     })
 
     return items;
   }
-  async createToDo(todoItem: TodoItem): Promise<TodoItem> {
-    console.log('Creating new todo')
+  async createCartItem(cartItem: CartItem): Promise<CartItem> {
+    console.log('Creating new cart item')
 
     const params = {
-      TableName: this.todoTable,
-      Item: todoItem
+      TableName: this.cartTable,
+      Item: cartItem
     }
     const result = await this.docClient.put(params).promise()
     console.log(result)
 
-    return todoItem as TodoItem
+    return cartItem as CartItem
   }
 
-  async updateToDo(
-    todoUpdate: TodoUpdate,
-    todoId: string,
+  async updateCartItem(
+    cartUpdate: CartUpdate,
+    cartId: string,
     userId: string
-  ): Promise<TodoUpdate> {
-    console.log('Updating todo')
+  ): Promise<CartUpdate> {
+    console.log('Updating cart item')
 
     const params = {
-      TableName: this.todoTable,
+      TableName: this.cartTable,
       Key: {
         userId: userId,
-        todoId: todoId
+        itemId: cartId
       },
-      UpdateExpression: 'set #a = :a, #b = :b, #c = :c',
+      UpdateExpression: 'set #a = :a, #b = :b, #c = :c, #d = :d',
       ExpressionAttributeNames: {
         '#a': 'name',
-        '#b': 'dueDate',
-        '#c': 'done'
+        '#b': 'price',
+        '#c': 'price',
+        '#d': 'done'
       },
       ExpressionAttributeValues: {
-        ':a': todoUpdate['name'],
-        ':b': todoUpdate['dueDate'],
-        ':c': todoUpdate['done']
+        ':a': cartUpdate['name'],
+        ':b': cartUpdate['description'],
+        ':c': cartUpdate['price'],
+        ':d': cartUpdate['done']
       },
       ReturnValues: 'ALL_NEW'
     }
@@ -86,17 +87,17 @@ export class todosAccess {
     console.log(result)
     const attributes = result.Attributes
 
-    return attributes as TodoUpdate
+    return attributes as CartUpdate
   }
 
-  async deleteToDo(todoId: string, userId: string): Promise<string> {
-    console.log('Deleting todo')
+  async deleteCartItem(cartId: string, userId: string): Promise<string> {
+    console.log('Deleting cart item')
 
     const params = {
-      TableName: this.todoTable,
+      TableName: this.cartTable,
       Key: {
         userId: userId,
-        todoId: todoId
+        itemId: cartId
       }
     }
     const result = await this.docClient.delete(params).promise()
@@ -104,12 +105,12 @@ export class todosAccess {
 
     return '' as string
   }
-  async generateUploadUrl(todoId: string): Promise<string> {
+  async generateUploadUrl(cartId: string): Promise<string> {
     console.log('Generating URL')
 
     const url = this.s3Client.getSignedUrl('putObject', {
       Bucket: this.s3BucketName,
-      Key: todoId,
+      Key: cartId,
       Expires: 1000
     })
     console.log(url)

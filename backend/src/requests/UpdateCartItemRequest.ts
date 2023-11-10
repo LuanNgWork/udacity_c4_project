@@ -1,8 +1,9 @@
 /**
  * Fields in a request to update a single TODO item.
  */
-export interface UpdateTodoRequest {
+export interface UpdateCartItemRequest {
   name: string
-  dueDate: string
+  description: string
+  price: number
   done: boolean
 }

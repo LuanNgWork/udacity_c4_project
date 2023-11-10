@@ -1,9 +1,8 @@
-service: serverless-application-ToDos
+service: serverless-application-cart-items
 
 plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
-  # - serverless-reqvalidator-plugin
   - serverless-aws-documentation
   - serverless-plugin-tracing
 
@@ -20,8 +19,8 @@ provider:
 
   environment:
     PROJECT_NAME: udacity-p4
-    TODOS_TABLE: serverless-application-todos-${self:provider.stage}
-    S3_BUCKET_NAME: serverless-application-todos-${self:provider.stage}
+    CART_ITEMS_TABLE: serverless-application-cart-items-${self:provider.stage}
+    S3_BUCKET_NAME: serverless-application-cart-items-${self:provider.stage}
     SIGNED_EXPIRATION: 300
     
   logs:
@@ -41,34 +40,34 @@ custom:
     api:
       info:
         version: '1.0.0'
-        title: serverless-application-todo-api
-        description: serverless-application-todo-api
+        title: serverless-application-cart-item-api
+        description: serverless-application-cart-item-api
     models:
-      - name: CreateTodoRequest
+      - name: CreateCartItemRequest
         contentType: "application/json"
         schema:
           required:
             - name
-            - dueDate
+            - price
           properties:
             name:
               minLength: 1
               type: string
-            dueDate:
-              type: string
-      - name: UpdateTodoRequest
+            price:
+              type: number
+      - name: UpdateCartItemRequest
         contentType: "application/json"
         schema:
           required:
             - name
-            - dueDate
+            - price
             - done
           properties:
             name:
               minLength: 1
               type: string
-            dueDate:
-              type: string
+            price:
+              type: number
             done:
               type: boolean
           
@@ -78,115 +77,65 @@ functions:
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
 
-  GetTodos:
-    handler: src/lambda/http/getTodos.handler
+  GetCartItems:
+    handler: src/lambda/http/getCartItems.handler
     events:
       - http:
           method: get
-          path: todos
+          path: cart-items
           cors: true
           authorizer: Auth
-    # iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-get-todo-role-${self:provider.stage}
-    # iamRoleStatements:
-    #   - Effect: Allow
-    #     Action:
-    #       - dynamodb:Query
-    #     Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-    #   - Effect: Allow
-    #     Action:
-    #       - xray:PutTraceSegments
-    #       - xray:PutTelemetryRecords
-    #     Resource: 
-    #       - '*'
-    role: 'S3BucketAccessRole'
+    role: 'S3CartBucketAccessRole'
 
  
  
-  CreateTodo:
-    handler: src/lambda/http/createTodo.handler
+  CreateCartItem:
+    handler: src/lambda/http/createCartItem.handler
     events:
       - http:
           method: post
-          path: todos
+          path: cart-items
           cors: true
           authorizer: Auth
           request:
             schemas:
-              application/json: ${file(models/create-todo-model.json)}
+              application/json: ${file(models/create-cart-item-model.json)}
           documentation:
-            summary: "Create a new todo item"
-            description: "Create a new todo item"
+            summary: "Create a new cart item"
+            description: "Create a new cart item"
             requestModels:
-              "application/json": CreateTodoRequest
-          # reqValidatorName: RequestBodyValidator
-    # iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-create-todo-role-${self:provider.stage}
-    # iamRoleStatements:
-    #   - Effect: Allow
-    #     Action:
-    #       - dynamodb:PutItem
-    #     Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-    #   - Effect: Allow
-    #     Action:
-    #       - xray:PutTraceSegments
-    #       - xray:PutTelemetryRecords
-    #     Resource: 
-    #       - '*'
-    role: 'S3BucketAccessRole'
+              "application/json": CreateCartItemRequest
+    role: 'S3CartBucketAccessRole'
 
   
-  UpdateTodo:
-    handler: src/lambda/http/updateTodo.handler
+  UpdateCartItem:
+    handler: src/lambda/http/updateCartItem.handler
     events:
       - http:
           method: patch
-          path: todos/{todoId}
+          path: cart-items/{itemId}
           cors: true
           authorizer: Auth
           request:
             schemas:
-              application/json: ${file(models/update-todo-model.json)}
+              application/json: ${file(models/update-cart-item-model.json)}
           documentation:
-            summary: "Update a todo item"
-            description: "Update a todo item"
+            summary: "Update a cart item"
+            description: "Update a cart item"
             requestModels:
-              "application/json": UpdateTodoRequest
-          # reqValidatorName: RequestBodyValidator
-    # iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-update-todo-role-${self:provider.stage}
-    # iamRoleStatements:
-    #   - Effect: Allow
-    #     Action:
-    #       - dynamodb:UpdateItem
-    #     Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-    #   - Effect: Allow
-    #     Action:
-    #       - xray:PutTraceSegments
-    #       - xray:PutTelemetryRecords
-    #     Resource: 
-    #       - '*'
-    role: 'S3BucketAccessRole'
+              "application/json": UpdateCartItemRequest
+    role: 'S3CartBucketAccessRole'
 
 
-  DeleteTodo:
-    handler: src/lambda/http/deleteTodo.handler
+  DeleteCartItem:
+    handler: src/lambda/http/deleteCartItem.handler
     events:
       - http:
           method: delete
-          path: todos/{todoId}
+          path: cart-items/{itemId}
           cors: true
           authorizer: Auth
-    # iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-delete-todo-role-${self:provider.stage}
-    # iamRoleStatements:
-    #   - Effect: Allow
-    #     Action:
-    #       - dynamodb:DeleteItem
-    #     Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-    #   - Effect: Allow
-    #     Action:
-    #       - xray:PutTraceSegments
-    #       - xray:PutTelemetryRecords
-    #     Resource: 
-    #       - '*'
-    role: 'S3BucketAccessRole'
+    role: 'S3CartBucketAccessRole'
 
   
   GenerateUploadUrl:
@@ -194,54 +143,28 @@ functions:
     events:
       - http:
           method: post
-          path: todos/{todoId}/attachment
+          path: cart-items/{itemId}/attachment
           cors: true
           authorizer: Auth
-    # iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-s3-upload-role-${self:provider.stage}
-    # iamRoleStatements:
-    #   - Effect: Allow
-    #     Action:
-    #       - s3:*
-    #       - xray:PutTraceSegments
-    #       - xray:PutTelemetryRecords
-    #     Resource: arn:aws:s3:::${self:provider.environment.S3_BUCKET_NAME}/*
-    role: 'S3BucketAccessRole'
+    role: 'S3CartBucketAccessRole'
 
 resources:
   Resources:
-    TodosTable:
+    CartItemsTable:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
-          - AttributeName: todoId
+          - AttributeName: itemId
             AttributeType: S
         KeySchema:
           - AttributeName: userId
             KeyType: HASH
-          - AttributeName: todoId
+          - AttributeName: itemId
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.TODOS_TABLE}
-        
-    # onlyBody:
-    #   Type: "AWS::ApiGateway::RequestValidator"
-    #   Properties:
-    #     Name: 'only-body'
-    #     RestApiId:
-    #       Ref: ApiGatewayRestApi
-    #     ValidateRequestBody: true
-    #     ValidateRequestParameters: false
-
-    # RequestBodyValidator:
-    #   Type: AWS::ApiGateway::RequestValidator
-    #   Properties:
-    #     Name: 'request-body-validator'
-    #     RestApiId:
-    #       Ref: ApiGatewayRestApi
-    #     ValidateRequestBody: true
-    #     ValidateRequestParameters: false
+        TableName: ${self:provider.environment.CART_ITEMS_TABLE}
 
     GatewayResponseDefault4XX:
       Type: AWS::ApiGateway::GatewayResponse
@@ -288,10 +211,10 @@ resources:
                 - HEAD
               MaxAge: 300 
 
-    S3BucketAccessRole:
+    S3CartBucketAccessRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: S3BucketAccessRole
+        RoleName: S3CartBucketAccessRole
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
           Statement:
@@ -314,37 +237,9 @@ resources:
                     - dynamodb:UpdateItem
                     - dynamodb:PutItem
                     - dynamodb:Query
-                  Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+                  Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.CART_ITEMS_TABLE}
                 - Effect: Allow
                   Action:
                     - xray:PutTraceSegments
                     - xray:PutTelemetryRecords
                   Resource: '*'
-
-              
-              # Condition:
-              #   Bool:
-              #     aws:SecureTransport: 'true'
-
-    # BucketPolicy:
-    #   Type: AWS::S3::BucketPolicy
-    #   Properties:
-    #     Bucket: !Ref AttachmentsBucket
-    #     PolicyDocument:
-    #       Id: MyPolicy
-    #       Version: '2012-10-17'
-    #       Statement:
-    #         - Sid: PublicReadForGetBucketObjects
-    #           Effect: Allow
-    #           Principal: '*'
-              # Action: 's3:*'
-              # Action: 
-              #   - 's3:GetObject'
-              # Resource: [
-              #   'arn:aws:s3:::${self:provider.environment.S3_BUCKET_NAME}',
-              #   'arn:aws:s3:::${self:provider.environment.S3_BUCKET_NAME}/*'
-              # ]
-              # Resource: 'arn:aws:s3:::${self:provider.environment.S3_BUCKET_NAME}/*'
-              # Condition:
-              #   Bool:
-              #     aws:SecureTransport: 'true'

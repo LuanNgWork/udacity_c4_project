@@ -1,7 +1,7 @@
 import 'source-map-support/register'
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
-import {getAllToDo} from "../../businessLogic/todos";
+import {getAllCartItems} from "../../businessLogic/cartItems";
 
 
 // TODO: Get all TODO items for a current user
@@ -11,7 +11,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     const authorization = event.headers.Authorization;
     const split = authorization.split(' ');
     const jwtToken = split[1];
-    const todos = await getAllToDo(jwtToken);
+    const cartItems = await getAllCartItems(jwtToken);
 
     return {
       statusCode: 200,
@@ -20,7 +20,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
           'Access-Control-Allow-Credentials': true
       },
       body: JSON.stringify({
-        "items":  todos
+        "items":  cartItems
       })
   }
 }
