@@ -31,9 +31,17 @@ export class todosAccess {
     }
     const result = await this.docClient.query(params).promise()
     console.log(result)
-    const items = result.Items
+    const items: TodoItem[] = result.Items as TodoItem[];
+    items.forEach((item) => {
+      const url = this.s3Client.getSignedUrl('getObject', {
+        Bucket: this.s3BucketName,
+        Key: item.todoId,
+        Expires: 1000
+      })
+      item.attachmentUrl = url
+    })
 
-    return items as TodoItem[]
+    return items;
   }
   async createToDo(todoItem: TodoItem): Promise<TodoItem> {
     console.log('Creating new todo')

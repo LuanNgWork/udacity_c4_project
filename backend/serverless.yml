@@ -3,7 +3,7 @@ service: serverless-application-ToDos
 plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
-  - serverless-reqvalidator-plugin
+  # - serverless-reqvalidator-plugin
   - serverless-aws-documentation
   - serverless-plugin-tracing
 
@@ -26,6 +26,15 @@ provider:
     
   logs:
     restApi: true
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - xray:PutTelemetryRecords
+            - xray:PutTraceSegments
+          Resource: "*"
 
 custom:
   documentation:
@@ -101,12 +110,15 @@ functions:
           path: todos
           cors: true
           authorizer: Auth
+          request:
+            schemas:
+              application/json: ${file(models/create-todo-model.json)}
           documentation:
             summary: "Create a new todo item"
             description: "Create a new todo item"
             requestModels:
               "application/json": CreateTodoRequest
-          reqValidatorName: RequestBodyValidator
+          # reqValidatorName: RequestBodyValidator
     # iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-create-todo-role-${self:provider.stage}
     # iamRoleStatements:
     #   - Effect: Allow
@@ -130,12 +142,15 @@ functions:
           path: todos/{todoId}
           cors: true
           authorizer: Auth
+          request:
+            schemas:
+              application/json: ${file(models/update-todo-model.json)}
           documentation:
             summary: "Update a todo item"
             description: "Update a todo item"
             requestModels:
               "application/json": UpdateTodoRequest
-          reqValidatorName: RequestBodyValidator
+          # reqValidatorName: RequestBodyValidator
     # iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-update-todo-role-${self:provider.stage}
     # iamRoleStatements:
     #   - Effect: Allow
@@ -210,23 +225,23 @@ resources:
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODOS_TABLE}
         
-    onlyBody:
-      Type: "AWS::ApiGateway::RequestValidator"
-      Properties:
-        Name: 'only-body'
-        RestApiId:
-          Ref: ApiGatewayRestApi
-        ValidateRequestBody: true
-        ValidateRequestParameters: false
+    # onlyBody:
+    #   Type: "AWS::ApiGateway::RequestValidator"
+    #   Properties:
+    #     Name: 'only-body'
+    #     RestApiId:
+    #       Ref: ApiGatewayRestApi
+    #     ValidateRequestBody: true
+    #     ValidateRequestParameters: false
 
-    RequestBodyValidator:
-      Type: AWS::ApiGateway::RequestValidator
-      Properties:
-        Name: 'request-body-validator'
-        RestApiId:
-          Ref: ApiGatewayRestApi
-        ValidateRequestBody: true
-        ValidateRequestParameters: false
+    # RequestBodyValidator:
+    #   Type: AWS::ApiGateway::RequestValidator
+    #   Properties:
+    #     Name: 'request-body-validator'
+    #     RestApiId:
+    #       Ref: ApiGatewayRestApi
+    #     ValidateRequestBody: true
+    #     ValidateRequestParameters: false
 
     GatewayResponseDefault4XX:
       Type: AWS::ApiGateway::GatewayResponse
