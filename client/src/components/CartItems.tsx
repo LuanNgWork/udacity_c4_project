@@ -204,13 +204,18 @@ export class CartItems extends React.PureComponent<CartItemsProps, CartItemsStat
               <Grid.Column width={1} verticalAlign="middle">
                 {cartItem.price}
               </Grid.Column>
+              <Grid.Column width={6}>
+                {cartItem.imageUrl && (
+                  <Image src={cartItem.imageUrl} size="small" wrapped />
+                )}
+              </Grid.Column>
               <Grid.Column width={1} floated="right">
                 <Button
                   icon
                   color="blue"
                   onClick={() => this.onEditButtonClick(cartItem.itemId)}
                 >
-                  <Icon name="pencil" />
+                  <Icon name="image" />
                 </Button>
               </Grid.Column>
               <Grid.Column width={1} floated="right">
@@ -222,9 +227,6 @@ export class CartItems extends React.PureComponent<CartItemsProps, CartItemsStat
                   <Icon name="delete" />
                 </Button>
               </Grid.Column>
-              {cartItem.imageUrl && (
-                <Image src={cartItem.imageUrl} size="small" wrapped />
-              )}
               <Grid.Column width={16}>
                 <Divider />
               </Grid.Column>

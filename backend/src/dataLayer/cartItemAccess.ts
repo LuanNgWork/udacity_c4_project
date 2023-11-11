@@ -68,18 +68,23 @@ export class cartItemAccess {
         userId: userId,
         itemId: cartId
       },
-      UpdateExpression: 'set #a = :a, #b = :b, #c = :c, #d = :d',
+      // UpdateExpression: 'set #a = :a, #b = :b, #c = :c, #d = :d',
+      UpdateExpression: 'set #a = :a, #b = :b, #c = :c',
       ExpressionAttributeNames: {
         '#a': 'name',
-        '#b': 'description',
-        '#c': 'price',
-        '#d': 'done'
+        // '#b': 'description',
+        '#b': 'price',
+        // '#c': 'price',
+        '#c': 'done'
+        // '#d': 'done'
       },
       ExpressionAttributeValues: {
         ':a': cartUpdate['name'],
-        ':b': cartUpdate['description'],
-        ':c': cartUpdate['price'],
-        ':d': cartUpdate['done']
+        // ':b': cartUpdate['description'],
+        ':b': cartUpdate['price'],
+        // ':c': cartUpdate['price'],
+        ':c': cartUpdate['done']
+        // ':d': cartUpdate['done']
       },
       ReturnValues: 'ALL_NEW'
     }

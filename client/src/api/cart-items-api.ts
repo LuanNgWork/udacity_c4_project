@@ -14,7 +14,15 @@ export async function getCartItems(idToken: string): Promise<CartItem[]> {
     },
   })
   console.log('CartItems:', response.data)
-  return response.data.items
+  const items = response.data.items as CartItem[]
+  for (let item of items) {
+    try {
+      await Axios.get(item.imageUrl as string)
+    } catch (error) {
+      delete item.imageUrl;
+    }
+  }
+  return items;
 }
 
 export async function createCartItem(
